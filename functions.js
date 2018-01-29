@@ -58,13 +58,12 @@ function saveEventDetails(eventGUID) {
             var homeFilters = data.event.homeFilters;
             var div = document.createElement("div");
             div.setAttribute("id","store-"+eventGUID);    
-            div.setAttribute("actualLiveStartTime",data.event.actualLiveStartTime);
-            div.setAttribute("displayStartDate",data.event.displayStartDate);
-            div.setAttribute("actualEndTime",data.event.actualEndTime);
-            div.setAttribute("displayEndDate",data.event.displayEndDate);
+            div.setAttribute("actualLiveStartTime",makeTimeNice(data.event.actualLiveStartTime));
+            div.setAttribute("displayStartDate",makeTimeNice(data.event.displayStartDate));
+            div.setAttribute("actualEndTime",makeTimeNice(data.event.actualEndTime));
+            div.setAttribute("displayEndDate",makeTimeNice(data.event.displayEndDate));
             div.setAttribute("live",homeFilters.live);
             div.setAttribute("liveAndArchive",homeFilters.liveAndArchive);
-            div.setAttribute("thumbnail",data.thumbnailUrl); 
             div.setAttribute("planningState",data.event.states.planningState); 
             div.setAttribute("recordingState",data.event.states.recordingState); 
             div.setAttribute("recordedState",data.event.states.recordedState); 
@@ -145,10 +144,10 @@ function makeMultiview(){
                 commonsPlayer = embedPlayerCode(commonsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
                 document.getElementById("commonsPlayer").innerHTML = commonsPlayer.replace("autoStart=False",autoStartReplace);
                 document.getElementById("commonsPlayer").classList.remove("hidden");
-				var popOverHead = '<table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>';
+				var popOverHead = '<table class="table table-hover"><tbody>';
 				var popOverBody = "";
 				for(var index in details){
-					var popOverBody = popOverBody + '<tr><td>'+index+' </td><td>'+details[index]+'</td><tr/>'
+					var popOverBody = popOverBody + '<tr><td scope="row">'+index+' </td><td>'+details[index]+'</td><tr/>'
 				}
 				var popOverFooter = '</tbody></table>';
 				var popOverContent = popOverHead + popOverBody + popOverFooter;
@@ -159,10 +158,10 @@ function makeMultiview(){
                 var lordsGUID = eventGUID;
                 lordsPlayer = embedPlayerCode(lordsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
                 document.getElementById("lordsPlayer").innerHTML = lordsPlayer.replace("autoStart=False",autoStartReplace);;
-				var popOverHead = '<table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>';
+				var popOverHead = '<table class="table table-hover"><tbody>';
 				var popOverBody = "";
 				for(var index in details){
-					var popOverBody = popOverBody + '<tr><td>'+index+' </td><td>'+details[index]+'</td><tr/>'
+					var popOverBody = popOverBody + '<tr><th scope="row">'+index+' </td><td>'+details[index]+'</td><tr/>'
 				}
 				var popOverFooter = '</tbody></table>';
 				var popOverContent = popOverHead + popOverBody + popOverFooter;
@@ -178,10 +177,10 @@ function makeMultiview(){
                 playerNode.innerHTML = '<iframe src="http://videoplayback.parliamentlive.tv/Player/Index/'+eventGUID+'?audioOnly=False&amp;'+autoStartReplace+'&amp;statsEnabled=True" id="UKPPlayer" name="UKPPlayer" title="UK Parliament Player" seamless="seamless" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe><h2><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';      
                 quarterNode.appendChild(playerNode);
                 currentDiv.appendChild(quarterNode);
-				var popOverHead = '<table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>';
+				var popOverHead = '<table class="table table-hover"><tbody>';
 				var popOverBody = "";
 				for(var index in details){
-					var popOverBody = popOverBody + '<tr><td>'+index+' </td><td>'+details[index]+'</td><tr/>'
+					var popOverBody = popOverBody + '<tr><td scope="row">'+index+' </td><td>'+details[index]+'</td><tr/>'
 				}
 				var popOverFooter = '</tbody></table>';
 				var popOverContent = popOverHead + popOverBody + popOverFooter;
@@ -209,6 +208,12 @@ function embedPlayerCode(eventGUID){
      embedCode = '<iframe src="http://videoplayback.parliamentlive.tv/Player/Index/'+eventGUID+'?audioOnly=False&amp;autoStart=False&amp;statsEnabled=True" id="UKPPlayer" name="UKPPlayer" title="UK Parliament Player" seamless="seamless" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe>';
     return embedCode;
 }    
+   
+function makeTimeNice(timeString) {
+    var timeStringSplit = timeString.split("T");
+    var niceTime = timeStringSplit[1].replace("Z","");
+    return niceTime;
+}
    
 function calculateDuration(startTime,endTime){
     var a = startTime.split(':');
