@@ -73,3 +73,7 @@ h2 span {
     text-align: center;
     color: white !important; 
 }
+
+.popover{
+    max-width: none !important;
+}

@@ -142,15 +142,31 @@ function makeMultiview(){
         if(eventStatus == eventTypes || eventTypes == "all") {
             if(eventTitle == "House of Commons"){
                 var commonsGUID = eventGUID;
-                commonsPlayer = embedPlayerCode(commonsGUID)+'<h2><span data-toggle="popover" rel="popover" data-content="displayStartDate: " title="Event Details" class="multiLabel">'+eventTitle+'</span></h2><a data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'" data-content="<table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody><tr><td>Details will live here</td><td>'+details.playerstate+'</td><tr/></tbody></table>">'+details.playerstate+'</a>';
+                commonsPlayer = embedPlayerCode(commonsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
                 document.getElementById("commonsPlayer").innerHTML = commonsPlayer.replace("autoStart=False",autoStartReplace);
                 document.getElementById("commonsPlayer").classList.remove("hidden");
+				var popOverHead = '<table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>';
+				var popOverBody = "";
+				for(var index in details){
+					var popOverBody = popOverBody + '<tr><td>'+index+' </td><td>'+details[index]+'</td><tr/>'
+				}
+				var popOverFooter = '</tbody></table>';
+				var popOverContent = popOverHead + popOverBody + popOverFooter;
+				document.getElementById("popOver-"+eventGUID).setAttribute("data-content",popOverContent);
                 console.log('Loading Commons Player');
                 var commonsHasVideo = true; 
             } else if (eventTitle == "House of Lords"){
                 var lordsGUID = eventGUID;
-                lordsPlayer = embedPlayerCode(lordsGUID)+'<h2><span data-toggle="popover" rel="popover" data-content="displayStartDate: " title="Event Details" class="multiLabel">'+eventTitle+'</span></h2><a data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'" data-content="<table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody><tr><td>Details will live here</td><td>'+details.playerstate+'</td><tr/></tbody></table>">'+details.playerstate+'</a>';
+                lordsPlayer = embedPlayerCode(lordsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
                 document.getElementById("lordsPlayer").innerHTML = lordsPlayer.replace("autoStart=False",autoStartReplace);;
+				var popOverHead = '<table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>';
+				var popOverBody = "";
+				for(var index in details){
+					var popOverBody = popOverBody + '<tr><td>'+index+' </td><td>'+details[index]+'</td><tr/>'
+				}
+				var popOverFooter = '</tbody></table>';
+				var popOverContent = popOverHead + popOverBody + popOverFooter;
+				document.getElementById("popOver-"+eventGUID).setAttribute("data-content",popOverContent);
                 document.getElementById("lordsPlayer").classList.remove("hidden");
                 console.log('Loading Lords Player');
                 var lordsHasVideo = true;
@@ -159,15 +175,26 @@ function makeMultiview(){
                 quarterNode.className = "col-lg-3";
                 var playerNode = document.createElement("div");
                 playerNode.className = "player";
-                playerNode.innerHTML = '<iframe src="http://videoplayback.parliamentlive.tv/Player/Index/'+eventGUID+'?audioOnly=False&amp;'+autoStartReplace+'&amp;statsEnabled=True" id="UKPPlayer" name="UKPPlayer" title="UK Parliament Player" seamless="seamless" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe><h2><span class="multiLabel">'+eventTitle+'</span></h2><a data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'" data-content="<table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody><tr><td>Details will live here</td><td>'+details.playerstate+'</td><tr/></tbody></table>">'+details.playerstate+'</a>';      
+                playerNode.innerHTML = '<iframe src="http://videoplayback.parliamentlive.tv/Player/Index/'+eventGUID+'?audioOnly=False&amp;'+autoStartReplace+'&amp;statsEnabled=True" id="UKPPlayer" name="UKPPlayer" title="UK Parliament Player" seamless="seamless" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe><h2><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';      
                 quarterNode.appendChild(playerNode);
                 currentDiv.appendChild(quarterNode);
+				var popOverHead = '<table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>';
+				var popOverBody = "";
+				for(var index in details){
+					var popOverBody = popOverBody + '<tr><td>'+index+' </td><td>'+details[index]+'</td><tr/>'
+				}
+				var popOverFooter = '</tbody></table>';
+				var popOverContent = popOverHead + popOverBody + popOverFooter;
+				document.getElementById("popOver-"+eventGUID).setAttribute("data-content",popOverContent);
+				
                 console.log('Loading '+eventTitle+' Player');
             }
         }    
     }
     $(function () {
-      $('[data-toggle="popover"]').popover()
+      $('[data-toggle="popover"]').popover({
+			container: 'body'
+		})
     })
     if(commonsHasVideo !== true){
         document.getElementById("commonsPlayer").innerHTML = '<img src="http://videoplayback.parliamentlive.tv/Content/img/planning.jpg" width="100%"><h2><span class="multiLabel">House of Commons</span></h2>';
