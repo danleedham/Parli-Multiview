@@ -31,24 +31,24 @@ function getEvents(grabDate) {
             
             // Make the list of events into a dropdown list             
             var select = document.getElementById("selectEvent");
-            $("#selectEvent").empty();
-            var el = document.createElement("option");
-            el.textContent = "Select Event...";
-            select.appendChild(el);            
+            $("#selectEvent").empty();          
             for(var i = 0; i < eventsList.length; i++) {
                 var el = document.createElement("option");
                 el.textContent = eventsList[i].description;
                 el.value = eventsList[i].guid;
                 select.appendChild(el);      
             }
-            return eventsList;
+            $("#infostore").empty();
+            for(var i = 0; i < eventsList.length; i++) {
+                saveEventDetails(eventsList[i].guid);
+            }  
         }
     });
     
 }
 
 // Go get helpful information for the given event
-function getEventDetails(eventGUID) {
+function saveEventDetails(eventGUID) {
     var eventURL = 'http://parliamentlive.tv/Event/GetMainVideo/'+eventGUID; 
     return $.ajax({
         url: 'https://cors-anywhere.herokuapp.com/'+eventURL,
@@ -56,17 +56,23 @@ function getEventDetails(eventGUID) {
         type: 'GET',
         success: function (data) {
             var homeFilters = data.event.homeFilters;
-            var details = Array();
-            details.push({
-                actualLiveStartTime : data.event.actualLiveStartTime,
-                displayStartDate: data.event.displayStartDate,
-                actualEndTime : data.event.actualEndTime,
-                displayEndDate : data.event.displayEndDate,
-                live : homeFilters.live,
-                liveAndArchive : homeFilters.liveAndArchive,
-                thumbnail : data.thumbnailUrl,
-                embedCode : data.embedCode
-            });
+            var div = document.createElement("div");
+            div.setAttribute("id","store-"+eventGUID);    
+            div.setAttribute("actualLiveStartTime",data.event.actualLiveStartTime);
+            div.setAttribute("displayStartDate",data.event.displayStartDate);
+            div.setAttribute("actualEndTime",data.event.actualEndTime);
+            div.setAttribute("displayEndDate",data.event.displayEndDate);
+            div.setAttribute("live",homeFilters.live);
+            div.setAttribute("liveAndArchive",homeFilters.liveAndArchive);
+            div.setAttribute("thumbnail",data.thumbnailUrl); 
+            div.setAttribute("planningState",data.event.states.planningState); 
+            div.setAttribute("recordingState",data.event.states.recordingState); 
+            div.setAttribute("recordedState",data.event.states.recordedState); 
+            div.setAttribute("playerState",data.event.states.playerState);
+            div.setAttribute("channelName",data.event.channelName);
+            div.setAttribute("room",data.event.room);
+    
+            document.getElementById("infostore").appendChild(div);
         }
     });
 }
@@ -103,39 +109,63 @@ function makeMultiview(){
     var events = document.getElementById("selectEvent").getElementsByTagName("option");
     $("#players").empty();
     var currentDiv = document.getElementById("players");
-    
+    var eventTypes = document.getElementById("eventTypes").value;
+    console.log('Loading Events that are status: '+eventTypes);    
+    // Loop through each event
     for(i=0; i<events.length; i++){
         var eventTitle = events[i].innerText;
         var eventGUID = events[i].value;
-        if(eventTitle == "House of Commons"){
-            var commonsGUID = events[i].value;
-            commonsPlayer = embedPlayerCode(commonsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2>';
-            document.getElementById("commonsPlayer").innerHTML = commonsPlayer;
-            document.getElementById("commonsPlayer").classList.remove("hidden");
-            console.log('Loading Commons Player');
-            var commonsHasVideo = true; 
-            var commonsDetails = getEventDetails(commonsGUID);
-            var commonsArray = makeDetailsObjectAnArray(commonsDetails);
-            console.log(commonsArray);
-        } else if (eventTitle == "House of Lords"){
-            var lordsGUID = events[i].value;
-            lordsPlayer = embedPlayerCode(lordsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2>';
-            document.getElementById("lordsPlayer").innerHTML = lordsPlayer;
-            document.getElementById("lordsPlayer").classList.remove("hidden");
-            console.log('Loading Lords Player');
-            var lordsHasVideo = true;
-        } else if (eventTitle == "Select Event...") {
-            // Do Nothing 
-        } else {
-            var quarterNode = document.createElement("div");
-            quarterNode.className = "col-lg-3";
-            var playerNode = document.createElement("div");
-            playerNode.className = "player";
-            playerNode.innerHTML = '<iframe src="http://videoplayback.parliamentlive.tv/Player/Index/'+eventGUID+'?audioOnly=False&amp;autoStart=False&amp;statsEnabled=True" id="UKPPlayer" name="UKPPlayer" title="UK Parliament Player" seamless="seamless" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe><h2><span class="multiLabel">'+eventTitle+'</span></h2>';      
-            quarterNode.appendChild(playerNode);
-            currentDiv.appendChild(quarterNode);
-            console.log('Loading '+eventTitle+' Player');
+        // Build an array of details
+        var el = document.getElementById("store-"+eventGUID);
+        var nodes=Array();
+        var values=Array();
+        var details= Array();
+        for (var att, j = 0, atts = el.attributes, n = atts.length; j < n; j++){
+            att = atts[j];
+            nodes.push(att.nodeName);
+            values.push(att.nodeValue);
         }
+        for (j=0; j<nodes.length; j++){
+            details[nodes[j]] = values[j];
+        }
+        if(details.live == "true"){
+            var eventStatus = "live";
+            var autoStartReplace = "autoStart=True";
+        } else if (details.liveandarchive == "true"){
+            var eventStatus = "vod";
+            var autoStartReplace = "autoStart=False";
+        } else {
+            var eventStatus = "pre";
+            var autoStartReplace = "autoStart=False";
+        }
+        
+        
+        if(eventStatus == eventTypes || eventTypes == "all") {
+            if(eventTitle == "House of Commons"){
+                var commonsGUID = eventGUID;
+                commonsPlayer = embedPlayerCode(commonsGUID)+'<h2><span data-toggle="popover" rel="popover" data-content="displayStartDate: " title="Event Details" class="multiLabel">'+eventTitle+'</span></h2>';
+                document.getElementById("commonsPlayer").innerHTML = commonsPlayer.replace("autoStart=False",autoStartReplace);
+                document.getElementById("commonsPlayer").classList.remove("hidden");
+                console.log('Loading Commons Player');
+                var commonsHasVideo = true; 
+            } else if (eventTitle == "House of Lords"){
+                var lordsGUID = eventGUID;
+                lordsPlayer = embedPlayerCode(lordsGUID)+'<h2><span data-toggle="popover" rel="popover" data-content="displayStartDate: " title="Event Details" class="multiLabel">'+eventTitle+'</span></h2>';
+                document.getElementById("lordsPlayer").innerHTML = lordsPlayer.replace("autoStart=False",autoStartReplace);;
+                document.getElementById("lordsPlayer").classList.remove("hidden");
+                console.log('Loading Lords Player');
+                var lordsHasVideo = true;
+            } else {
+                var quarterNode = document.createElement("div");
+                quarterNode.className = "col-lg-3";
+                var playerNode = document.createElement("div");
+                playerNode.className = "player";
+                playerNode.innerHTML = '<iframe src="http://videoplayback.parliamentlive.tv/Player/Index/'+eventGUID+'?audioOnly=False&amp;'+autoStartReplace+'&amp;statsEnabled=True" id="UKPPlayer" name="UKPPlayer" title="UK Parliament Player" seamless="seamless" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe><h2><span class="multiLabel">'+eventTitle+'</span></h2>';      
+                quarterNode.appendChild(playerNode);
+                currentDiv.appendChild(quarterNode);
+                console.log('Loading '+eventTitle+' Player');
+            }
+        }    
     }
     if(commonsHasVideo !== true){
         document.getElementById("commonsPlayer").innerHTML = '<img src="http://videoplayback.parliamentlive.tv/Content/img/planning.jpg" width="100%"><h2><span class="multiLabel">House of Commons</span></h2>';
@@ -145,22 +175,7 @@ function makeMultiview(){
     }     
 }
 
-function makeDetailsObjectAnArray(data){
-    var homeFilters = data.responseJSON.event.homeFilters;
-    var details = Array();
-    details.push({
-        actualLiveStartTime : data.responseJSON.event.actualLiveStartTime,
-        displayStartDate: data.responseJSON.event.displayStartDate,
-        actualEndTime : data.responseJSON.event.actualEndTime,
-        displayEndDate : data.responseJSON.event.displayEndDate,
-        live : homeFilters.live,
-        liveAndArchive : homeFilters.liveAndArchive,
-        thumbnail : data.responseJSON.thumbnailUrl,
-        embedCode : data.responseJSON.embedCode
-    });
-    return details;
-}
-   
+// Returns the general embed code for a given GUID. Autostart set to False   
 function embedPlayerCode(eventGUID){
      embedCode = '<iframe src="http://videoplayback.parliamentlive.tv/Player/Index/'+eventGUID+'?audioOnly=False&amp;autoStart=False&amp;statsEnabled=True" id="UKPPlayer" name="UKPPlayer" title="UK Parliament Player" seamless="seamless" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe>';
     return embedCode;
@@ -178,6 +193,7 @@ function calculateDuration(startTime,endTime){
     document.getElementById("duration").value = durationForInput;
     return duration;
 }
+
     
 function addZero(i) {
     if (i < 10) {
