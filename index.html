@@ -16,6 +16,7 @@
     $('#myModal').on('shown.bs.modal', function () {
       $('#myInput').focus()
     })
+
     </script>
      <link rel="stylesheet" href="styles.css">
 </head>
@@ -39,7 +40,7 @@
                 Options
             </button>
         </div>
-        
+        <div id="infostore" class="hidden"></div>
         <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -57,11 +58,11 @@
                             <select id="eventTypes" class="input-sm form-control" onchange="getEvents(document.getElementById('date').value); return false;">
                                 <option value="live">Live Events</option>
                                 <option value="vod">On Demand</option>
-                                <option value="all">All Events</option>
+                                <option selected value="all">All Events</option>
                             </select>
                         </div>
                         <div class="col-12">    
-                            <select id="selectEvent" class="input-sm form-control" onchange="getEventDetails(this.value); return false;"> </select>
+                            <select id="selectEvent" class="input-sm form-control"> </select>
                         </div>
                         <div class="col-lg-12">    
                             <a href="#" onclick="makeMultiview();return false;" class="btn btn-warning" role="button">Do Something!</a>
