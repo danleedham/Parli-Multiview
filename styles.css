@@ -1,5 +1,5 @@
 body {
-    background-color: black;
+    background-color: black !important;
     
 }
 
@@ -54,6 +54,7 @@ h2 span {
    background: rgb(0, 0, 0); /* fallback color */
    background: rgba(0, 0, 0, 0.7);
    padding: 10px; 
+   border-radius: 5px;
 }
 
 .container {
@@ -62,4 +63,13 @@ h2 span {
 
 .hidden {
     display: none;
+}
+
+.streamInfo {
+    z-index: 5;
+    position: absolute; 
+    top: 12px;
+    left: 12px; 
+    text-align: center;
+    color: white !important; 
 }
