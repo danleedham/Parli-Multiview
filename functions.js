@@ -130,13 +130,16 @@ function makeMultiview(){
         if(details.live == "true"){
             var eventStatus = "live";
             var autoStartReplace = "autoStart=True";
-        } else if (details.liveandarchive == "true"){
+        } else if (details.playerstate == "ARCHIVE"){
             var eventStatus = "vod";
             var autoStartReplace = "autoStart=False";
-        } else {
+        } else if( details.playerstate == "PRELIVE"){
             var eventStatus = "pre";
             var autoStartReplace = "autoStart=False";
-        }
+        } else {
+			var eventStatus = "other";
+			var autoStartReplace = "autoStart=False";
+		}
         
         if(eventStatus == eventTypes || eventTypes == "all") {
             if(eventTitle == "House of Commons"){
@@ -210,9 +213,11 @@ function embedPlayerCode(eventGUID){
 }    
    
 function makeTimeNice(timeString) {
-    var timeStringSplit = timeString.split("T");
-    var niceTime = timeStringSplit[1].replace("Z","");
-    return niceTime;
+    if(timeString !== null){
+		var timeStringSplit = timeString.split("T");
+		var niceTime = timeStringSplit[1].replace("Z","");
+		return niceTime;
+	}
 }
    
 function calculateDuration(startTime,endTime){
