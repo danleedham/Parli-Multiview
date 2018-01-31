@@ -42,35 +42,59 @@
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">
                 Options
             </button>
+            <div id="loadingInfo" class="loader hidden"></div>
+        </div>      
+        <div id="infostore" class="hidden">
         </div>
-        <div id="infostore" class="hidden"></div>
+        
+        <!-- Pop Up Modal Box For Options -->
         <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Multi-view Options</h5>
+                        <h5 class="modal-title">Multiview Options</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                         </button>
                     </div><!-- modal header -->
                     <div class="modal-body">
-                        <div class="col-12">
-                            <input id="date" type="date" class="input-sm form-control" value="" onchange="getEvents(this.value)">
+                        <div class="row paddingTopAndBottom">
+                                <div class="col-12">
+                                <input id="date" type="date" class="input-sm form-control" value="" onchange="getEvents(this.value)">
+                            </div>
                         </div>
-                        <div class="col-lg-12">
-                            <select id="eventTypes" class="input-sm form-control">
-                                <option value="live" selected>Live Events</option>
-								<option value="pre">Planned Events</option>
-                                <option value="vod">On Demand</option>
-                                <option value="all">All Events</option>
-                            </select>
+                        <div class="row paddingTopAndBottom">    
+                            <div class="col-lg-12">
+                                <select id="eventTypes" class="input-sm form-control">
+                                    <option value="live" selected>Live Events</option>
+                                    <option value="pre">Planned Events</option>
+                                    <option value="vod">On Demand</option>
+                                    <option value="all">All Events</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-12">    
-                            <select id="selectEvent" class="input-sm form-control"> </select>
+                        <div class="row paddingTopAndBottom">    
+                            <div class="col-lg-12">
+                                <select id="sortBy" class="input-sm form-control">
+                                    <option value="" selected>Default</option>
+                                    <option value="channel">Channels Descending</option>
+                                    <option value="state">Player State</option>
+                                    <option value="alpha">Event Alphabetical</option>
+                                    <option value="start">Start Time</option>
+                                    <option value="location">Location</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-lg-12">    
-                            <a href="#" onclick="makeMultiview();return false;" class="btn btn-warning" role="button">Do Something!</a>
+                        <div class="row paddingTopAndBottom hidden">     
+                            <div class="col-12">    
+                                <select id="selectEvent" class="input-sm form-control"> </select>
+                            </div>
                         </div>    
+                        <div class="row paddingTopAndBottom">     
+                            <div class="col-lg-12">    
+                                <a href="#" onclick="makeMultiview();return false;" class="btn btn-warning" role="button">Make Multiview</a>
+                            </div>
+                       </div>         
                     </div><!-- modal body -->
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

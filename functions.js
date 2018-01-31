@@ -1,5 +1,8 @@
 // Go get the list of broadcasts for a particular day 
 function getEvents(grabDate) {
+    var loaderElement = document.getElementById("loadingInfo");
+    loaderElement.classList.remove("hidden");
+    
     // grabDate expected in format '2018-01-25';
     var epgURL = 'http://parliamentlive.tv/Guide/EpgDay?date='+grabDate+'T00%3A00%3A00%2B00%3A00';
     // Go get the EPG. Have to use CORS anywhere because of Cross Origin issues.
@@ -39,16 +42,32 @@ function getEvents(grabDate) {
                 select.appendChild(el);      
             }
             $("#infostore").empty();
+            var finalGUID =  eventsList[eventsList.length];
+           
             for(var i = 0; i < eventsList.length; i++) {
-                saveEventDetails(eventsList[i].guid);
-            }  
-        }
+                if(i == (eventsList.length - 1)){
+                    var ifLast = true;
+                } else {
+                    var ifLast = false;
+                }
+                saveEventDetails(eventsList[i].guid,ifLast);
+            }
+           
+            document.addEventListener("finalGUIDLoaded", function(e) {             
+              setTimeout(function(){ 
+                makeMultiview(); 
+                loaderElement.classList.add("hidden");
+              }, 500);
+              console.log(e.detail); // Prints "Example of an event"
+            });
+            
+        } // sucess  
     });
     
 }
 
 // Go get helpful information for the given event
-function saveEventDetails(eventGUID) {
+function saveEventDetails(eventGUID,ifLast) {
     var eventURL = 'http://parliamentlive.tv/Event/GetMainVideo/'+eventGUID; 
     return $.ajax({
         url: 'https://cors-anywhere.herokuapp.com/'+eventURL,
@@ -72,6 +91,13 @@ function saveEventDetails(eventGUID) {
             div.setAttribute("room",data.event.room);
     
             document.getElementById("infostore").appendChild(div);
+            
+            if(ifLast == true){
+                var event = new CustomEvent("finalGUIDLoaded", { 
+                    "detail": "Last GUID Loaded: " +  eventGUID
+                });
+                document.dispatchEvent(event);            
+            }   
         }
     });
 }
@@ -107,9 +133,37 @@ function getEventLogs(eventGUID) {
 function makeMultiview(){
     var events = document.getElementById("selectEvent").getElementsByTagName("option");
     $("#players").empty();
+    $("#commonsPlayer").empty();
+    $("#lordsPlayer").empty();
+    document.getElementById("commonsPlayer").classList.add("hidden");
+    document.getElementById("lordsPlayer").classList.add("hidden");
     var currentDiv = document.getElementById("players");
     var eventTypes = document.getElementById("eventTypes").value;
-    console.log('Loading Events that are status: '+eventTypes);    
+    var sortBy = document.getElementById("sortBy").value;
+    
+    for(i=0; i<events.length; i++){
+        var eventTitle = events[i].innerText;
+        var eventGUID = events[i].value;
+        var el = document.getElementById("store-"+eventGUID);
+        events[i].channel = el.getAttribute("channelname");
+        events[i].state = el.getAttribute("playerstate");
+        events[i].alpha = events[i].innerText;
+        events[i].start = el.getAttribute("displaystartdate");
+        events[i].location = el.getAttribute("room");
+    }
+    // console.log(events);
+    // Sort Events as required.
+    if(sortBy !== ""){
+        events.sort(function(a,b) {
+            var x = a[sortBy];
+            var y = b[sortBy];
+            return (x > y) ? 1 : ((y > x) ? -1 : 0) ; 
+        });         
+    } else {
+        // Do nothing. 
+    }
+    
+    console.log('Loading Events that are status: ' + eventTypes + ' ordered by ' +sortBy);    
     // Loop through each event
     for(i=0; i<events.length; i++){
         var eventTitle = events[i].innerText;
@@ -198,10 +252,10 @@ function makeMultiview(){
 			container: 'body'
 		})
     })
-    if(commonsHasVideo !== true){
+    if(eventTypes == "live" && commonsHasVideo !== true){
         document.getElementById("commonsPlayer").innerHTML = '<img src="http://videoplayback.parliamentlive.tv/Content/img/planning.jpg" width="100%"><h2><span class="multiLabel">House of Commons</span></h2>';
     }
-    if(lordsHasVideo !== true){
+    if(eventTypes == "live" && lordsHasVideo !== true){
         document.getElementById("lordsPlayer").innerHTML = '<img src="http://videoplayback.parliamentlive.tv/Content/img/planning.jpg" width="100%"><h2><span class="multiLabel">House of Lords</span></h2>';
     }     
 }
@@ -244,3 +298,13 @@ function addZero(i) {
 $('.popover-dismiss').popover({
   trigger: 'focus'
 })
+
+function sortBy(field){
+    return function(a, b){
+        if (a[field] > b[field])
+         return -1;
+      if (a[field] < b[field])
+        return 1;
+      return 0;
+    };
+}
