@@ -62,7 +62,7 @@ h2 span {
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 .streamInfo {

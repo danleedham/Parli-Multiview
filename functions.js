@@ -2,7 +2,6 @@
 function getEvents(grabDate) {
     var loaderElement = document.getElementById("loadingInfo");
     loaderElement.classList.remove("hidden");
-    
     // grabDate expected in format '2018-01-25';
     var epgURL = 'http://parliamentlive.tv/Guide/EpgDay?date='+grabDate+'T00%3A00%3A00%2B00%3A00';
     // Go get the EPG. Have to use CORS anywhere because of Cross Origin issues.
@@ -57,6 +56,8 @@ function getEvents(grabDate) {
               setTimeout(function(){ 
                 makeMultiview(); 
                 loaderElement.classList.add("hidden");
+                var optionsElement = document.getElementById("optionsButton");
+                optionsElement.classList.remove("hidden");
               }, 500);
               console.log(e.detail); // Prints "Example of an event"
             });
