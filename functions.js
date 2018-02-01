@@ -41,25 +41,26 @@ function getEvents(grabDate) {
                 select.appendChild(el);      
             }
             $("#infostore").empty();
-            var finalGUID =  eventsList[eventsList.length];
-           
+ 
             for(var i = 0; i < eventsList.length; i++) {
-                if(i == (eventsList.length - 1)){
-                    var ifLast = true;
-                } else {
-                    var ifLast = false;
-                }
-                saveEventDetails(eventsList[i].guid,ifLast);
+                saveEventDetails(eventsList[i].guid);
             }
-           
-            document.addEventListener("finalGUIDLoaded", function(e) {             
-              setTimeout(function(){ 
-                makeMultiview(); 
-                loaderElement.classList.add("hidden");
-                var optionsElement = document.getElementById("optionsButton");
-                optionsElement.classList.remove("hidden");
-              }, 500);
-              console.log(e.detail); // Prints "Example of an event"
+            
+            var numberLoaded = 0;
+            
+            document.addEventListener("GUIDLoaded", function(e) {             
+              
+            numberLoaded = numberLoaded + 1;
+            
+            if(numberLoaded == eventsList.length){
+                    setTimeout(function(){    
+                        makeMultiview();           
+                        loaderElement.classList.add("hidden");
+                        var optionsElement = document.getElementById("optionsButton");
+                        optionsElement.classList.remove("hidden");
+                    }, 500);
+                }
+                console.log(e.detail); // Prints "Example of an event"
             });
             
         } // sucess  
@@ -68,7 +69,7 @@ function getEvents(grabDate) {
 }
 
 // Go get helpful information for the given event
-function saveEventDetails(eventGUID,ifLast) {
+function saveEventDetails(eventGUID) {
     var eventURL = 'http://parliamentlive.tv/Event/GetMainVideo/'+eventGUID; 
     return $.ajax({
         url: 'https://cors-anywhere.herokuapp.com/'+eventURL,
@@ -92,13 +93,10 @@ function saveEventDetails(eventGUID,ifLast) {
             div.setAttribute("room",data.event.room);
     
             document.getElementById("infostore").appendChild(div);
-            
-            if(ifLast == true){
-                var event = new CustomEvent("finalGUIDLoaded", { 
-                    "detail": "Last GUID Loaded: " +  eventGUID
-                });
-                document.dispatchEvent(event);            
-            }   
+            var event = new CustomEvent("GUIDLoaded", { 
+                "detail": "GUID Info Loaded for " +  eventGUID
+            });
+            document.dispatchEvent(event);            
         }
     });
 }
