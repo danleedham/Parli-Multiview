@@ -169,7 +169,7 @@ function makeMultiview(){
         if(eventStatus == eventTypes || eventTypes == "all") {
             if(eventTitle == "House of Commons"){
                 var commonsGUID = eventGUID;
-                commonsPlayer = embedPlayerCode(commonsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
+                commonsPlayer = embedPlayerCode(commonsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2><span id="commonsLogs"></span><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
                 document.getElementById("commonsPlayer").innerHTML = commonsPlayer.replace("autoStart=False",autoStartReplace);
                 
                 document.getElementById("commonsPlayer").setAttribute("guid",commonsGUID);
@@ -188,7 +188,7 @@ function makeMultiview(){
                 var commonsHasVideo = true; 
             } else if (eventTitle == "House of Lords"){
                 var lordsGUID = eventGUID;
-                lordsPlayer = embedPlayerCode(lordsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
+                lordsPlayer = embedPlayerCode(lordsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2><span id="lordsLogs"></span><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
                 document.getElementById("lordsPlayer").innerHTML = lordsPlayer.replace("autoStart=False",autoStartReplace);;
 				document.getElementById("lordsPlayer").setAttribute("guid",lordsGUID);
 				var popOverHead = '<table class="table table-hover"><tbody>';
@@ -244,10 +244,6 @@ function addLogIntoToPlayers(){
     for(i=0; i<events.length; i++){
         var eventTitle = events[i].innerText;
         var eventGUID = events[i].value;
-        
-        // Add log info to Commons and Lords
-       
-        
         // For now we're only interested in the logs for the main chambers...
         if(eventTitle == "House of Commons" || eventTitle == "House of Lords"){
             if(eventTitle == "House of Commons"){
@@ -288,15 +284,21 @@ function addLogIntoToPlayers(){
                     logsContent = '<a id="logsPop-'+keepEventGUID+'" data-html="true" tabindex="0" class="btn btn-success logsInfo" role="button" data-placement="left" data-toggle="popover" data-trigger="focus" title="Logs Info">'+logs.length+'</a>'
                     console.log(logsContent);       
                     if(keepEventGUID == commonsGUID){
-                        document.getElementById("commonsPlayer").innerHTML = document.getElementById("commonsPlayer").innerHTML + logsContent;
-                        var popOverContent = ("Time of Last Log: " + logs[logs.length - 1].niceTime + "<br />" + logs[logs.length - 1].content)
-				        document.getElementById("logsPop-"+keepEventGUID).setAttribute("data-content",popOverContent);
-                        console.log('Log info added for the Commons');
+                        var commonsLogs = document.getElementById("commonsLogs");
+                        if (typeof(commonsLogs) != 'undefined' && commonsLogs != null){
+                            document.getElementById("commonsLogs").innerHTML = logsContent;
+                            var popOverContent = ("Time of Last Log: " + logs[logs.length - 1].niceTime + "<br />" + logs[logs.length - 1].content)
+                            document.getElementById("logsPop-"+keepEventGUID).setAttribute("data-content",popOverContent);
+                            console.log('Log info added for the Commons');
+                        }    
                     } else if (keepEventGUID == lordsGUID){
-                        document.getElementById("lordsPlayer").innerHTML = document.getElementById("lordsPlayer").innerHTML + logsContent;
-                        var popOverContent = ("Time of Last Log: "+logs[logs.length - 1].niceTime)
-				        document.getElementById("logsPop-"+keepEventGUID).setAttribute("data-content",popOverContent);
-                        console.log('Log info added for the Lords');
+                        var lordsLogs = document.getElementById("lordsLogs");
+                        if (typeof(lordsLogs) != 'undefined' && lordsLogs != null){
+                            document.getElementById("lordsLogs").innerHTML = logsContent;
+                            var popOverContent = ("Time of Last Log: "+logs[logs.length - 1].niceTime)
+                            document.getElementById("logsPop-"+keepEventGUID).setAttribute("data-content",popOverContent);
+                            console.log('Log info added for the Lords');
+                        }
                     } else {
                 
                     }
