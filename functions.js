@@ -48,13 +48,12 @@ function getEvents(grabDate) {
             
             var numberLoaded = 0;
             
-            document.addEventListener("GUIDLoaded", function(e) {             
-              
-            numberLoaded = numberLoaded + 1;
-            
-            if(numberLoaded == eventsList.length){
+            document.addEventListener("GUIDLoaded", function(e) {               
+                numberLoaded = numberLoaded + 1;
+                if(numberLoaded == eventsList.length){
                     setTimeout(function(){    
-                        makeMultiview();           
+                        makeMultiview();
+                        addLogIntoToPlayers();           
                         loaderElement.classList.add("hidden");
                         var optionsElement = document.getElementById("optionsButton");
                         optionsElement.classList.remove("hidden");
@@ -99,33 +98,6 @@ function saveEventDetails(eventGUID) {
             document.dispatchEvent(event);            
         }
     });
-}
-
-// Get Logs for a particular event
-function getEventLogs(eventGUID) {
-    var eventURL = 'http://parliamentlive.tv/Event/Logs/'+eventGUID; 
-    $.ajax({
-        url: 'https://cors-anywhere.herokuapp.com/'+eventURL,
-        dataType: 'html', 
-        type: 'GET',
-        success: function (data) {            
-            doc = $.parseHTML(data);     
-            var logs = [];
-            for (i=0; i<doc.length; i++){
-                if(doc[i].nodeName == "#text"){
-                } else {
-                    var logTime = doc[i].getElementsByClassName("time-code")[0].getAttribute("data-time");
-                    var logContent = doc[i].getElementsByClassName("stack-item")[0].innerText;
-                    logs.push({
-                        time: logTime,
-                        content: logContent.trim() 
-                    });
-                }
-            }             
-            // console.log(logs);
-        }
-    });
-
 }
 
 // Make a broadcast multi-viewer of live events
@@ -199,21 +171,26 @@ function makeMultiview(){
                 var commonsGUID = eventGUID;
                 commonsPlayer = embedPlayerCode(commonsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
                 document.getElementById("commonsPlayer").innerHTML = commonsPlayer.replace("autoStart=False",autoStartReplace);
-                document.getElementById("commonsPlayer").classList.remove("hidden");
+                
+                document.getElementById("commonsPlayer").setAttribute("guid",commonsGUID);
 				var popOverHead = '<table class="table table-hover"><tbody>';
 				var popOverBody = "";
 				for(var index in details){
-					var popOverBody = popOverBody + '<tr><td scope="row">'+index+' </td><td>'+details[index]+'</td><tr/>'
+				    if(index !== "id"){
+					    var popOverBody = popOverBody + '<tr><td scope="row">'+index+' </td><td>'+details[index]+'</td><tr/>'
+					}
 				}
 				var popOverFooter = '</tbody></table>';
 				var popOverContent = popOverHead + popOverBody + popOverFooter;
 				document.getElementById("popOver-"+eventGUID).setAttribute("data-content",popOverContent);
                 console.log('Loading Commons Player');
+                document.getElementById("commonsPlayer").classList.remove("hidden");
                 var commonsHasVideo = true; 
             } else if (eventTitle == "House of Lords"){
                 var lordsGUID = eventGUID;
                 lordsPlayer = embedPlayerCode(lordsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
                 document.getElementById("lordsPlayer").innerHTML = lordsPlayer.replace("autoStart=False",autoStartReplace);;
+				document.getElementById("lordsPlayer").setAttribute("guid",lordsGUID);
 				var popOverHead = '<table class="table table-hover"><tbody>';
 				var popOverBody = "";
 				for(var index in details){
@@ -222,14 +199,15 @@ function makeMultiview(){
 				var popOverFooter = '</tbody></table>';
 				var popOverContent = popOverHead + popOverBody + popOverFooter;
 				document.getElementById("popOver-"+eventGUID).setAttribute("data-content",popOverContent);
-                document.getElementById("lordsPlayer").classList.remove("hidden");
                 console.log('Loading Lords Player');
+                document.getElementById("lordsPlayer").classList.remove("hidden");
                 var lordsHasVideo = true;
             } else {
                 var quarterNode = document.createElement("div");
                 quarterNode.className = "col-lg-3";
                 var playerNode = document.createElement("div");
                 playerNode.className = "player";
+                playerNode.setAttribute("id","player-"+eventGUID); 
                 playerNode.innerHTML = '<iframe src="http://videoplayback.parliamentlive.tv/Player/Index/'+eventGUID+'?audioOnly=False&amp;'+autoStartReplace+'&amp;statsEnabled=True" id="UKPPlayer" name="UKPPlayer" title="UK Parliament Player" seamless="seamless" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe><h2><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';      
                 quarterNode.appendChild(playerNode);
                 currentDiv.appendChild(quarterNode);
@@ -257,6 +235,81 @@ function makeMultiview(){
     if(eventTypes == "live" && lordsHasVideo !== true){
         document.getElementById("lordsPlayer").innerHTML = '<img src="http://videoplayback.parliamentlive.tv/Content/img/planning.jpg" width="100%"><h2><span class="multiLabel">House of Lords</span></h2>';
     }     
+}
+
+function addLogIntoToPlayers(){
+    var events = document.getElementById("selectEvent").getElementsByTagName("option");
+    
+    // Loop through each event
+    for(i=0; i<events.length; i++){
+        var eventTitle = events[i].innerText;
+        var eventGUID = events[i].value;
+        
+        // Add log info to Commons and Lords
+       
+        
+        // For now we're only interested in the logs for the main chambers...
+        if(eventTitle == "House of Commons" || eventTitle == "House of Lords"){
+            if(eventTitle == "House of Commons"){
+                var commonsGUID = eventGUID;
+            } else if (eventTitle == "House of Lords") {
+                var lordsGUID = eventGUID;    
+            }
+            var eventURL = 'http://parliamentlive.tv/Event/Logs/'+eventGUID; 
+            $.ajax({
+                url: 'https://cors-anywhere.herokuapp.com/'+eventURL,
+                dataType: 'html', 
+                type: 'GET',
+                success: function (data) {
+                    keepEventGUID = this.url.replace('https://cors-anywhere.herokuapp.com/http://parliamentlive.tv/Event/Logs/','')            
+                    doc = $.parseHTML(data);     
+                    var logs = [];
+                    for (i=0; i<doc.length; i++){
+                        if(doc[i].nodeName == "#text"){
+                        } else {
+                            var logTime = doc[i].getElementsByClassName("time-code")[0].getAttribute("data-time");
+                            var logContent = doc[i].getElementsByClassName("stack-item")[0].innerText;
+                            var niceTime = makeTimeNice(logTime);
+                            var a = niceTime.split(':'); // split it at the colons
+                            var seconds = (+a[0]) * 60 * 60 + (+a[1]) * 60 + (+a[2]);        
+                            logs.push({
+                                time: logTime,
+                                niceTime : niceTime,
+                                seconds: seconds,
+                                content: logContent.trim() 
+                            });
+                        }
+                    }
+                     
+                    logs.sort(function(a, b) {
+                        return a.seconds - b.seconds;
+                    });
+                             
+                    logsContent = '<a id="logsPop-'+keepEventGUID+'" data-html="true" tabindex="0" class="btn btn-success logsInfo" role="button" data-placement="left" data-toggle="popover" data-trigger="focus" title="Logs Info">'+logs.length+'</a>'
+                    console.log(logsContent);       
+                    if(keepEventGUID == commonsGUID){
+                        document.getElementById("commonsPlayer").innerHTML = document.getElementById("commonsPlayer").innerHTML + logsContent;
+                        var popOverContent = ("Time of Last Log: " + logs[logs.length - 1].niceTime + "<br />" + logs[logs.length - 1].content)
+				        document.getElementById("logsPop-"+keepEventGUID).setAttribute("data-content",popOverContent);
+                        console.log('Log info added for the Commons');
+                    } else if (keepEventGUID == lordsGUID){
+                        document.getElementById("lordsPlayer").innerHTML = document.getElementById("lordsPlayer").innerHTML + logsContent;
+                        var popOverContent = ("Time of Last Log: "+logs[logs.length - 1].niceTime)
+				        document.getElementById("logsPop-"+keepEventGUID).setAttribute("data-content",popOverContent);
+                        console.log('Log info added for the Lords');
+                    } else {
+                
+                    }
+                    $(function () {
+                      $('[data-toggle="popover"]').popover({
+                            container: 'body'
+                        })
+                    })                
+                }
+            }); 
+        }
+    }
+    
 }
 
 // Returns the general embed code for a given GUID. Autostart set to False   

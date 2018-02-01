@@ -74,6 +74,15 @@ h2 span {
     color: white !important; 
 }
 
+.logsInfo {
+    z-index: 4;
+    position: absolute; 
+    top: 12px;
+    right: 12px; 
+    text-align: center;
+    color: white !important; 
+}
+
 .popover{
     max-width: none !important;
 }
