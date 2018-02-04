@@ -31,9 +31,9 @@ function getEvents(grabDate) {
                 } 
             }
             
-            // Make the list of events into a dropdown list             
-            var select = document.getElementById("selectEvent");
-            $("#selectEvent").empty();          
+            // Make the list of events into a dropdown list                        
+            $("#selectEvent").empty();   
+            var select = document.getElementById("selectEvent");    
             for(var i = 0; i < eventsList.length; i++) {
                 var el = document.createElement("option");
                 el.textContent = eventsList[i].description;
@@ -42,6 +42,12 @@ function getEvents(grabDate) {
             }
             $("#infostore").empty();
  
+            if(eventsList.length == 0){
+                console.log("No Events For "+grabDate);
+                loaderElement.classList.add("hidden");
+                var optionsElement = document.getElementById("optionsButton");
+                optionsElement.classList.remove("hidden");
+            }
             for(var i = 0; i < eventsList.length; i++) {
                 saveEventDetails(eventsList[i].guid);
             }
@@ -59,7 +65,7 @@ function getEvents(grabDate) {
                         optionsElement.classList.remove("hidden");
                     }, 500);
                 }
-                console.log(e.detail); // Prints "Example of an event"
+                console.log(e.detail); 
             });
             
         } // sucess  
@@ -110,31 +116,45 @@ function makeMultiview(){
     document.getElementById("lordsPlayer").classList.add("hidden");
     var currentDiv = document.getElementById("players");
     var eventTypes = document.getElementById("eventTypes").value;
-    var sortBy = document.getElementById("sortBy").value;
+    var sortByThis = document.getElementById("sortBy").value;
     
-    for(i=0; i<events.length; i++){
-        var eventTitle = events[i].innerText;
-        var eventGUID = events[i].value;
-        var el = document.getElementById("store-"+eventGUID);
-        events[i].channel = el.getAttribute("channelname");
-        events[i].state = el.getAttribute("playerstate");
-        events[i].alpha = events[i].innerText;
-        events[i].start = el.getAttribute("displaystartdate");
-        events[i].location = el.getAttribute("room");
-    }
-    // console.log(events);
-    // Sort Events as required.
-    if(sortBy !== ""){
-        events.sort(function(a,b) {
-            var x = a[sortBy];
-            var y = b[sortBy];
-            return (x > y) ? 1 : ((y > x) ? -1 : 0) ; 
-        });         
+    if(sortByThis != ""){
+        // Add the extra sortable data to the events array
+        for(i=0; i<events.length; i++){
+            var eventTitle = events[i].innerText;
+            var eventGUID = events[i].value;
+            var el = document.getElementById("store-"+eventGUID);
+            events[i].channel = el.getAttribute("channelname");
+            events[i].state = el.getAttribute("playerstate");
+            events[i].alpha = events[i].innerText;
+            if(el.getAttribute("actuallivestarttime") == "undefined"){
+                events[i].start = el.getAttribute("displaystartdate");
+            } else {
+                events[i].start = el.getAttribute("actuallivestarttime");
+            }
+            if(el.getAttribute("actualendtime") == "undefined"){
+                events[i].end = el.getAttribute("displayenddate");
+            } else {
+                events[i].end = el.getAttribute("actualendtime");
+            }
+            
+            events[i].location = el.getAttribute("room");
+        }
+   
+        // Make a new array from the HTML collection to a proper array;
+        var arr = Array.from(events);
+        
+        // Sort the array by the selected field
+        var arrSorted = sortByField(arr,sortByThis);  
+        console.log(arr);
+        
+        // Change the events variable to the newly sorted one.
+        var events = arr;
     } else {
-        // Do nothing. 
+        var events = Array.from(events);
     }
     
-    console.log('Loading Events that are status: ' + eventTypes + ' ordered by ' +sortBy);    
+    console.log('Loading Events that are status: ' + eventTypes + ' ordered by ' +sortByThis);    
     // Loop through each event
     for(i=0; i<events.length; i++){
         var eventTitle = events[i].innerText;
@@ -276,37 +296,43 @@ function addLogIntoToPlayers(){
                             });
                         }
                     }
-                     
-                    logs.sort(function(a, b) {
-                        return a.seconds - b.seconds;
-                    });
+                    if(logs.length > 0) { 
+                        logs.sort(function(a, b) {
+                            return a.seconds - b.seconds;
+                        });
                              
-                    logsContent = '<a id="logsPop-'+keepEventGUID+'" data-html="true" tabindex="0" class="btn btn-success logsInfo" role="button" data-placement="left" data-toggle="popover" data-trigger="focus" title="Logs Info">'+logs.length+'</a>'
-                    console.log(logsContent);       
-                    if(keepEventGUID == commonsGUID){
-                        var commonsLogs = document.getElementById("commonsLogs");
-                        if (typeof(commonsLogs) != 'undefined' && commonsLogs != null){
-                            document.getElementById("commonsLogs").innerHTML = logsContent;
-                            var popOverContent = ("Time of Last Log: " + logs[logs.length - 1].niceTime + "<br />" + logs[logs.length - 1].content)
-                            document.getElementById("logsPop-"+keepEventGUID).setAttribute("data-content",popOverContent);
-                            console.log('Log info added for the Commons');
-                        }    
-                    } else if (keepEventGUID == lordsGUID){
-                        var lordsLogs = document.getElementById("lordsLogs");
-                        if (typeof(lordsLogs) != 'undefined' && lordsLogs != null){
-                            document.getElementById("lordsLogs").innerHTML = logsContent;
-                            var popOverContent = ("Time of Last Log: "+logs[logs.length - 1].niceTime)
-                            document.getElementById("logsPop-"+keepEventGUID).setAttribute("data-content",popOverContent);
-                            console.log('Log info added for the Lords');
+                        logsContent = '<a id="logsPop-'+keepEventGUID+'" data-html="true" tabindex="0" class="btn btn-success logsInfo" role="button" data-placement="left" data-toggle="popover" data-trigger="focus" title="Logs Info">'+logs.length+'</a>'
+                        // console.log(logsContent);       
+                        if(keepEventGUID == commonsGUID){
+                            var logsDivName = "commonsLogs";
+                            var addLogsInfo = true;
+                            var houseName = "Commons";
+                        } else if (keepEventGUID == lordsGUID){
+                            var logsDivName = "lordsLogs";
+                            var addLogsInfo = true;
+                            var houseName = "Lords";
                         }
-                    } else {
+                        
+                        if(addLogsInfo == true){
+                            var logsDiv = document.getElementById(logsDivName);
+                            
+                            if (typeof(logsDiv) != 'undefined' && logsDiv != null){
+                                logsDiv.innerHTML = logsContent;
+                                var popOverContent = ("Time of Last Log: " + logs[logs.length - 1].niceTime + "<br />" + logs[logs.length - 1].content)
+                                document.getElementById("logsPop-"+keepEventGUID).setAttribute("data-content",popOverContent);
+                                console.log('Log info added for '+houseName);
+                            }    
+                        } else {
                 
-                    }
-                    $(function () {
-                      $('[data-toggle="popover"]').popover({
-                            container: 'body'
+                        }
+                        $(function () {
+                          $('[data-toggle="popover"]').popover({
+                                container: 'body'
+                            })
                         })
-                    })                
+                    } else {
+                        console.log("No Logs for " + keepEventGUID);
+                    }               
                 }
             }); 
         }
@@ -349,16 +375,18 @@ function addZero(i) {
     return i;
 }
 
+function sortByField(arr,sortByThis) {
+        function compare(a,b) {
+          if (a[sortByThis] < b[sortByThis])
+            return -1;
+          if (a[sortByThis] > b[sortByThis])
+            return 1;
+          return 0;
+        }
+    arr.sort(compare);
+    return arr;
+}
+
 $('.popover-dismiss').popover({
   trigger: 'focus'
 })
-
-function sortBy(field){
-    return function(a, b){
-        if (a[field] > b[field])
-         return -1;
-      if (a[field] < b[field])
-        return 1;
-      return 0;
-    };
-}
