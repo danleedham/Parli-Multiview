@@ -166,8 +166,10 @@ function makeMultiview(){
         var details= Array();
         for (var att, j = 0, atts = el.attributes, n = atts.length; j < n; j++){
             att = atts[j];
-            nodes.push(att.nodeName);
-            values.push(att.nodeValue);
+            if(att.nodeName != "id"){
+                nodes.push(att.nodeName);
+                values.push(att.nodeValue);
+            }
         }
         for (j=0; j<nodes.length; j++){
             details[nodes[j]] = values[j];
@@ -189,7 +191,7 @@ function makeMultiview(){
         if(eventStatus == eventTypes || eventTypes == "all") {
             if(eventTitle == "House of Commons"){
                 var commonsGUID = eventGUID;
-                commonsPlayer = embedPlayerCode(commonsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2><span id="commonsLogs"></span><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
+                commonsPlayer = embedPlayerCode(commonsGUID)+'<h2 class="eventTitleLabel"><span class="multiLabel">'+eventTitle+'</span></h2><span id="commonsLogs"></span><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
                 document.getElementById("commonsPlayer").innerHTML = commonsPlayer.replace("autoStart=False",autoStartReplace);
                 
                 document.getElementById("commonsPlayer").setAttribute("guid",commonsGUID);
@@ -208,7 +210,7 @@ function makeMultiview(){
                 var commonsHasVideo = true; 
             } else if (eventTitle == "House of Lords"){
                 var lordsGUID = eventGUID;
-                lordsPlayer = embedPlayerCode(lordsGUID)+'<h2><span class="multiLabel">'+eventTitle+'</span></h2><span id="lordsLogs"></span><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
+                lordsPlayer = embedPlayerCode(lordsGUID)+'<h2 class="eventTitleLabel"><span class="multiLabel">'+eventTitle+'</span></h2><span id="lordsLogs"></span><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
                 document.getElementById("lordsPlayer").innerHTML = lordsPlayer.replace("autoStart=False",autoStartReplace);;
 				document.getElementById("lordsPlayer").setAttribute("guid",lordsGUID);
 				var popOverHead = '<table class="table table-hover"><tbody>';
@@ -228,7 +230,7 @@ function makeMultiview(){
                 var playerNode = document.createElement("div");
                 playerNode.className = "player";
                 playerNode.setAttribute("id","player-"+eventGUID); 
-                playerNode.innerHTML = '<iframe src="http://videoplayback.parliamentlive.tv/Player/Index/'+eventGUID+'?audioOnly=False&amp;'+autoStartReplace+'&amp;statsEnabled=True" id="UKPPlayer" name="UKPPlayer" title="UK Parliament Player" seamless="seamless" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe><h2><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';      
+                playerNode.innerHTML = '<iframe src="http://videoplayback.parliamentlive.tv/Player/Index/'+eventGUID+'?audioOnly=False&amp;'+autoStartReplace+'&amp;statsEnabled=True" id="UKPPlayer" name="UKPPlayer" title="UK Parliament Player" seamless="seamless" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe><h2 class="eventTitleLabel"><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';      
                 quarterNode.appendChild(playerNode);
                 currentDiv.appendChild(quarterNode);
 				var popOverHead = '<table class="table table-hover"><tbody>';
@@ -250,10 +252,10 @@ function makeMultiview(){
 		})
     })
     if(eventTypes == "live" && commonsHasVideo !== true){
-        document.getElementById("commonsPlayer").innerHTML = '<img src="http://videoplayback.parliamentlive.tv/Content/img/planning.jpg" width="100%"><h2><span class="multiLabel">House of Commons</span></h2>';
+        document.getElementById("commonsPlayer").innerHTML = '<img src="http://videoplayback.parliamentlive.tv/Content/img/planning.jpg" width="100%"><h2 class="eventTitleLabel"><span class="multiLabel">House of Commons</span></h2>';
     }
     if(eventTypes == "live" && lordsHasVideo !== true){
-        document.getElementById("lordsPlayer").innerHTML = '<img src="http://videoplayback.parliamentlive.tv/Content/img/planning.jpg" width="100%"><h2><span class="multiLabel">House of Lords</span></h2>';
+        document.getElementById("lordsPlayer").innerHTML = '<img src="http://videoplayback.parliamentlive.tv/Content/img/planning.jpg" width="100%"><h2 class="eventTitleLabel"><span class="multiLabel">House of Lords</span></h2>';
     }     
 }
 
@@ -367,12 +369,17 @@ function calculateDuration(startTime,endTime){
     return duration;
 }
 
-    
+// For use with time data, if you take a number of hours, minutes, seconds that need a zero, this will add one
 function addZero(i) {
     if (i < 10) {
         i = "0" + i;
     }
     return i;
+}
+
+function hideLabels() {
+	$(".eventTitleLabel").fadeToggle();
+	$(".streamInfo").fadeToggle();
 }
 
 function sortByField(arr,sortByThis) {
@@ -387,6 +394,7 @@ function sortByField(arr,sortByThis) {
     return arr;
 }
 
+// Start all popovers
 $('.popover-dismiss').popover({
   trigger: 'focus'
 })

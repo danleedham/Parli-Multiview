@@ -8,10 +8,27 @@ body {
 }
 
 @media (min-width: 1200px) {
-  .container {
-    max-width: 1920px !important;
-  }
+	.container {
+		max-width: 1920px !important;
+	}
 }
+@media (min-width: 992px) {
+	.container {
+		max-width: none !important;
+	}
+
+}
+@media (min-width: 768px) {
+	  .container {
+		max-width: none !important;
+	}
+}
+@media (min-width: 576px) {
+	.container {
+		max-width: none !important;
+	}
+}
+
 .player {
     position: relative;
     padding-bottom: 56.25%; /* 16:9 */
