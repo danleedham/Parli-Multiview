@@ -82,8 +82,16 @@ function saveEventDetails(eventGUID) {
         type: 'GET',
         success: function (data) {
             var homeFilters = data.event.homeFilters;
-            var div = document.createElement("div");
+            
+            // If the element doesn't exist, create it. If it does, update the content
+            if($("#store-"+eventGUID).length == 0){
+                var div = document.createElement("div");
+            } else {
+                var div = document.getElementById("store-"+eventGUID);
+            }
+            
             div.setAttribute("id","store-"+eventGUID);    
+            div.setAttribute("title",data.event.title);
             div.setAttribute("actualLiveStartTime",makeTimeNice(data.event.actualLiveStartTime));
             div.setAttribute("displayStartDate",makeTimeNice(data.event.displayStartDate));
             div.setAttribute("actualEndTime",makeTimeNice(data.event.actualEndTime));
@@ -96,12 +104,20 @@ function saveEventDetails(eventGUID) {
             div.setAttribute("playerState",data.event.states.playerState);
             div.setAttribute("channelName",data.event.channelName);
             div.setAttribute("room",data.event.room);
-    
-            document.getElementById("infostore").appendChild(div);
-            var event = new CustomEvent("GUIDLoaded", { 
-                "detail": "GUID Info Loaded for " +  eventGUID
-            });
-            document.dispatchEvent(event);            
+            
+            if($("#store-"+eventGUID).length == 0){
+                document.getElementById("infostore").appendChild(div);
+                var event = new CustomEvent("GUIDLoaded", { 
+                    "detail": "GUID Info Loaded for " +  eventGUID
+                });
+                document.dispatchEvent(event);
+            } else {
+                var event = new CustomEvent("GUIDUpdated", { 
+                    "detail": eventGUID
+                });
+                document.dispatchEvent(event); 
+            }
+                                   
         }
     });
 }
@@ -110,10 +126,10 @@ function saveEventDetails(eventGUID) {
 function makeMultiview(){
     var events = document.getElementById("selectEvent").getElementsByTagName("option");
     $("#players").empty();
-    $("#commonsPlayer").empty();
-    $("#lordsPlayer").empty();
-    document.getElementById("commonsPlayer").classList.add("hidden");
-    document.getElementById("lordsPlayer").classList.add("hidden");
+    // $("#commonsPlayer").empty();
+    // $("#lordsPlayer").empty();
+    // document.getElementById("commonsPlayer").classList.add("hidden");
+   //  document.getElementById("lordsPlayer").classList.add("hidden");
     var currentDiv = document.getElementById("players");
     var eventTypes = document.getElementById("eventTypes").value;
     var sortByThis = document.getElementById("sortBy").value;
@@ -155,6 +171,7 @@ function makeMultiview(){
     }
     
     console.log('Loading Events that are status: ' + eventTypes + ' ordered by ' +sortByThis);    
+    
     // Loop through each event
     for(i=0; i<events.length; i++){
         var eventTitle = events[i].innerText;
@@ -180,7 +197,7 @@ function makeMultiview(){
         } else if (details.playerstate == "ARCHIVE"){
             var eventStatus = "vod";
             var autoStartReplace = "autoStart=False";
-        } else if( details.playerstate == "PRELIVE"){
+        } else if(details.playerstate == "PRELIVE"){
             var eventStatus = "pre";
             var autoStartReplace = "autoStart=False";
         } else {
@@ -189,60 +206,25 @@ function makeMultiview(){
 		}
         
         if(eventStatus == eventTypes || eventTypes == "all") {
-            if(eventTitle == "House of Commons"){
-                var commonsGUID = eventGUID;
-                commonsPlayer = embedPlayerCode(commonsGUID)+'<h2 class="eventTitleLabel"><span class="multiLabel">'+eventTitle+'</span></h2><span id="commonsLogs"></span><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
-                document.getElementById("commonsPlayer").innerHTML = commonsPlayer.replace("autoStart=False",autoStartReplace);
-                
-                document.getElementById("commonsPlayer").setAttribute("guid",commonsGUID);
-				var popOverHead = '<table class="table table-hover"><tbody>';
-				var popOverBody = "";
-				for(var index in details){
-				    if(index !== "id"){
-					    var popOverBody = popOverBody + '<tr><td scope="row">'+index+' </td><td>'+details[index]+'</td><tr/>'
-					}
-				}
-				var popOverFooter = '</tbody></table>';
-				var popOverContent = popOverHead + popOverBody + popOverFooter;
-				document.getElementById("popOver-"+eventGUID).setAttribute("data-content",popOverContent);
-                console.log('Loading Commons Player');
-                document.getElementById("commonsPlayer").classList.remove("hidden");
-                var commonsHasVideo = true; 
-            } else if (eventTitle == "House of Lords"){
-                var lordsGUID = eventGUID;
-                lordsPlayer = embedPlayerCode(lordsGUID)+'<h2 class="eventTitleLabel"><span class="multiLabel">'+eventTitle+'</span></h2><span id="lordsLogs"></span><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
-                document.getElementById("lordsPlayer").innerHTML = lordsPlayer.replace("autoStart=False",autoStartReplace);;
-				document.getElementById("lordsPlayer").setAttribute("guid",lordsGUID);
-				var popOverHead = '<table class="table table-hover"><tbody>';
-				var popOverBody = "";
-				for(var index in details){
-					var popOverBody = popOverBody + '<tr><th scope="row">'+index+' </td><td>'+details[index]+'</td><tr/>'
-				}
-				var popOverFooter = '</tbody></table>';
-				var popOverContent = popOverHead + popOverBody + popOverFooter;
-				document.getElementById("popOver-"+eventGUID).setAttribute("data-content",popOverContent);
-                console.log('Loading Lords Player');
-                document.getElementById("lordsPlayer").classList.remove("hidden");
-                var lordsHasVideo = true;
+            if(document.getElementById("commonsPlayer").hasAttribute("guid")){
+                var commonsHasPlayer = true;
             } else {
-                var quarterNode = document.createElement("div");
-                quarterNode.className = "col-lg-3";
-                var playerNode = document.createElement("div");
-                playerNode.className = "player";
-                playerNode.setAttribute("id","player-"+eventGUID); 
-                playerNode.innerHTML = '<iframe src="http://videoplayback.parliamentlive.tv/Player/Index/'+eventGUID+'?audioOnly=False&amp;'+autoStartReplace+'&amp;statsEnabled=True" id="UKPPlayer" name="UKPPlayer" title="UK Parliament Player" seamless="seamless" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe><h2 class="eventTitleLabel"><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';      
-                quarterNode.appendChild(playerNode);
-                currentDiv.appendChild(quarterNode);
-				var popOverHead = '<table class="table table-hover"><tbody>';
-				var popOverBody = "";
-				for(var index in details){
-					var popOverBody = popOverBody + '<tr><td scope="row">'+index+' </td><td>'+details[index]+'</td><tr/>'
-				}
-				var popOverFooter = '</tbody></table>';
-				var popOverContent = popOverHead + popOverBody + popOverFooter;
-				document.getElementById("popOver-"+eventGUID).setAttribute("data-content",popOverContent);
-				
-                console.log('Loading '+eventTitle+' Player');
+                var commonsHasPlayer = false;
+            }
+           if(document.getElementById("lordsPlayer").hasAttribute("guid")){
+                var lordsHasPlayer = true;
+            } else {
+                var lordsHasPlayer = false;
+            }
+            
+            if(eventTitle == "House of Commons" && commonsHasPlayer == false){
+                buildPlayer(eventGUID,"commons");
+                var commonsHasVideo = true;
+            } else if (eventTitle == "House of Lords" && lordsHasPlayer == false){
+                 buildPlayer(eventGUID,"lords");
+                 var lordsHasVideo = true;
+            } else {
+                buildPlayer(eventGUID,"normal");
             }
         }    
     }
@@ -257,6 +239,149 @@ function makeMultiview(){
     if(eventTypes == "live" && lordsHasVideo !== true){
         document.getElementById("lordsPlayer").innerHTML = '<img src="http://videoplayback.parliamentlive.tv/Content/img/planning.jpg" width="100%"><h2 class="eventTitleLabel"><span class="multiLabel">House of Lords</span></h2>';
     }     
+}
+
+function updateMultiview(){
+    
+    if(document.getElementById("eventTypes").value == "all"){
+        // makeMultiview(); 
+    } else {
+        // First update the data store for player statuses
+        var events = document.getElementById("selectEvent").getElementsByTagName("option");
+     
+        // Make a new array from the HTML collection to a proper array;
+        var events = Array.from(events);
+
+        for(var i = 0; i < events.length; i++) {
+            // Ignore all events which are already in Archive
+            var playerState = document.getElementById("store-"+events[i].value).getAttribute("playerstate");
+
+            if (playerState == "ARCHIVE"){
+                // No need to bother updating
+            } else {
+                // Make sure we have the most recent information
+                saveEventDetails(events[i].value);
+                
+                // Once the most recent information is loaded, we'll see if it's changed
+                document.addEventListener("GUIDUpdated", function(e) {               
+                    var eventTypes = document.getElementById("eventTypes").value;
+                    eventGUID = e.detail;
+                    newPlayerState = document.getElementById("store-"+eventGUID).getAttribute("playerstate");
+                    var newPlayerEventType = playerStateToEventTypes(newPlayerState);
+                    
+                    // If the player already exists...                 
+                    if($('#player-'+eventGUID).length > 0) {
+                        oldPlayerState = document.getElementById("player-"+eventGUID).getAttribute("playerstate");
+                        
+                        // Check to see if the player state has changed with the update
+                        if (newPlayerState != oldPlayerState){
+                            if (newPlayerEventType == eventTypes){
+                                buildPlayer(eventGUID,"normal");
+                            } else {
+                                // We need to remove the player
+                                $('#player-'+eventGUID).remove()
+                            }
+                        } else {
+                        }
+                    } else {
+                        // Player doesn't exist for this GUID
+                        // If the requested type is what we want then
+                        if (newPlayerEventType == eventTypes){
+                            buildPlayer(eventGUID,"normal");
+                        } else { 
+                            // Not of the requested type. Don't build player
+                        }
+                    }     
+                }); 
+            }
+        }
+    }      
+}
+
+function buildPlayer(eventGUID,type){
+    console.log("Building player for " + eventGUID);
+
+    // if the player exists, we'll be updating it so bin it first
+    if ($('#player-'+eventGUID).length > 0) {
+        $('#player-'+eventGUID).remove();
+    } else {
+    
+    }
+    
+    // Get the store info
+    var el = document.getElementById("store-"+eventGUID);
+    var nodes = Array();
+    var values = Array();
+    var details = Array();
+    for (var att, j = 0, atts = el.attributes, n = atts.length; j < n; j++){
+        att = atts[j];
+        if(att.nodeName != "id"){
+            nodes.push(att.nodeName);
+            values.push(att.nodeValue);
+        }
+    }
+    for (j=0; j<nodes.length; j++){
+        details[nodes[j]] = values[j];
+    }
+    
+    if(details.live == "true"){
+        var eventStatus = "live";
+        var autoStartReplace = "autoStart=True";
+    } else if (details.playerstate == "ARCHIVE"){
+        var eventStatus = "vod";
+        var autoStartReplace = "autoStart=False";
+    } else if(details.playerstate == "PRELIVE"){
+        var eventStatus = "pre";
+        var autoStartReplace = "autoStart=False";
+    } else {
+        var eventStatus = "other";
+        var autoStartReplace = "autoStart=False";
+    }
+    var eventTitle = details.title;
+    
+    // Because they're special, we treat the two main chambers differently
+    if(type == "commons" || type == "lords" ){
+        playerDivName = type + "Player";
+        playerDiv = embedPlayerCode(eventGUID)+'<h2 class="eventTitleLabel"><span class="multiLabel">'+eventTitle+'</span></h2><span id="commonsLogs"></span><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';
+        document.getElementById(playerDivName).innerHTML = playerDiv.replace("autoStart=False",autoStartReplace);
+    
+        document.getElementById(playerDivName).setAttribute("guid",eventGUID);
+        var popOverHead = '<table class="table table-hover"><tbody>';
+        var popOverBody = "";
+        for(var index in details){
+            if(index !== "id" && index !== "title" ){
+                var popOverBody = popOverBody + '<tr><td scope="row">'+index+' </td><td>'+details[index]+'</td><tr/>'
+            }
+        }
+        var popOverFooter = '</tbody></table>';
+        var popOverContent = popOverHead + popOverBody + popOverFooter;
+        document.getElementById("popOver-"+eventGUID).setAttribute("data-content",popOverContent);
+        document.getElementById(playerDivName).classList.remove("hidden");
+        var commonsHasVideo = true; 
+    } else {  
+        var playersDiv = document.getElementById("players");
+        var quarterNode = document.createElement("div");
+        quarterNode.className = "col-lg-3";
+        var playerNode = document.createElement("div");
+        playerNode.className = "player";
+        playerNode.setAttribute("id","player-"+eventGUID);
+        playerNode.setAttribute("playerstate",details.playerstate);
+        playerNode.innerHTML = '<iframe src="http://videoplayback.parliamentlive.tv/Player/Index/'+eventGUID+'?audioOnly=False&amp;'+autoStartReplace+'&amp;statsEnabled=True" id="UKPPlayer" name="UKPPlayer" title="UK Parliament Player" seamless="seamless" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe><h2 class="eventTitleLabel"><span class="multiLabel">'+eventTitle+'</span></h2><a id="popOver-'+eventGUID+'" data-html="true" tabindex="0" class="btn btn-danger streamInfo" role="button" data-toggle="popover" data-trigger="focus" title="'+eventTitle+'">'+details.playerstate+'</a>';      
+        quarterNode.appendChild(playerNode);
+        playersDiv.appendChild(quarterNode);
+        var popOverHead = '<table class="table table-hover"><tbody>';
+        var popOverBody = "";
+        for(var index in details){
+            if(index != "id" && index != "title"){
+                var popOverBody = popOverBody + '<tr><td scope="row">'+index+' </td><td>'+details[index]+'</td><tr/>'
+            }
+        }
+        var popOverFooter = '</tbody></table>';
+        var popOverContent = popOverHead + popOverBody + popOverFooter;
+        document.getElementById("popOver-"+eventGUID).setAttribute("data-content",popOverContent);
+    }
+    console.log('Loading '+eventTitle+' Player');
+    
 }
 
 // The initial Function to initialize logs
@@ -415,6 +540,19 @@ function sortByField(arr,sortByThis) {
         }
     arr.sort(compare);
     return arr;
+}
+
+function playerStateToEventTypes(playerState){
+    if(playerState == "LIVE"){
+        var eventStatus = "live";
+    } else if (playerState == "ARCHIVE"){
+        var eventStatus = "vod";
+    } else if(playerState == "PRELIVE"){
+        var eventStatus = "pre";
+    } else {
+        var eventStatus = "other";
+    } 
+    return eventStatus;
 }
 
 // Start all popovers
