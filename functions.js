@@ -259,6 +259,7 @@ function makeMultiview(){
     }     
 }
 
+// The initial Function to initialize logs
 function addLogIntoToPlayers(){
     var events = document.getElementById("selectEvent").getElementsByTagName("option");
     
@@ -298,40 +299,48 @@ function addLogIntoToPlayers(){
                             });
                         }
                     }
+                    
+                    // If there are logs then...
                     if(logs.length > 0) { 
-                        logs.sort(function(a, b) {
-                            return a.seconds - b.seconds;
-                        });
+                        // Either if the popOver doesn't exist, or the number of logs is now larger then...                        
+                        if($("#logsPop-"+keepEventGUID).length == 0 || ($("#logsPop-"+keepEventGUID).length > 0 && logs.length > $("#logsPop-"+keepEventGUID).text())){                        
+                            logs.sort(function(a, b) {
+                                return a.seconds - b.seconds;
+                            });
                              
-                        logsContent = '<a id="logsPop-'+keepEventGUID+'" data-html="true" tabindex="0" class="btn btn-success logsInfo" role="button" data-placement="left" data-toggle="popover" data-trigger="focus" title="Logs Info">'+logs.length+'</a>'
-                        // console.log(logsContent);       
-                        if(keepEventGUID == commonsGUID){
-                            var logsDivName = "commonsLogs";
-                            var addLogsInfo = true;
-                            var houseName = "Commons";
-                        } else if (keepEventGUID == lordsGUID){
-                            var logsDivName = "lordsLogs";
-                            var addLogsInfo = true;
-                            var houseName = "Lords";
-                        }
+                            // This is the popOver
+                            logsContent = '<a id="logsPop-'+keepEventGUID+'" data-html="true" tabindex="0" class="btn btn-success logsInfo" role="button" data-placement="left" data-toggle="popover" data-trigger="focus" title="Logs Info">'+logs.length+'</a>'
+                            // console.log(logsContent);       
+                            if(keepEventGUID == commonsGUID){
+                                var logsDivName = "commonsLogs";
+                                var addLogsInfo = true;
+                                var houseName = "Commons";
+                            } else if (keepEventGUID == lordsGUID){
+                                var logsDivName = "lordsLogs";
+                                var addLogsInfo = true;
+                                var houseName = "Lords";
+                            }
                         
-                        if(addLogsInfo == true){
-                            var logsDiv = document.getElementById(logsDivName);
+                            if(addLogsInfo == true){
+                                var logsDiv = document.getElementById(logsDivName);
                             
-                            if (typeof(logsDiv) != 'undefined' && logsDiv != null){
-                                logsDiv.innerHTML = logsContent;
-                                var popOverContent = ("Time of Last Log: " + logs[logs.length - 1].niceTime + "<br />" + logs[logs.length - 1].content)
-                                document.getElementById("logsPop-"+keepEventGUID).setAttribute("data-content",popOverContent);
-                                console.log('Log info added for '+houseName);
-                            }    
-                        } else {
+                                if (typeof(logsDiv) != 'undefined' && logsDiv != null){
+                                    logsDiv.innerHTML = logsContent;
+                                    var popOverContent = ("Time of Last Log: " + logs[logs.length - 1].niceTime + "<br />" + logs[logs.length - 1].content)
+                                    document.getElementById("logsPop-"+keepEventGUID).setAttribute("data-content",popOverContent);
+                                    console.log('Log info added for '+houseName);
+                                }    
+                            } else {
                 
-                        }
-                        $(function () {
-                          $('[data-toggle="popover"]').popover({
-                                container: 'body'
+                            }
+                            $(function () {
+                              $('[data-toggle="popover"]').popover({
+                                    container: 'body'
+                                })
                             })
-                        })
+                        } else {
+                            // console.log("No need to update logs for " + keepEventGUID);
+                        }
                     } else {
                         console.log("No Logs for " + keepEventGUID);
                     }               
@@ -340,8 +349,22 @@ function addLogIntoToPlayers(){
         }
     }
     
+    // Keep looking for new logs
+    if (document.getElementById('updateLogsPlease').checked) {
+        checkForLogsTenSeconds = setTimeout(addLogIntoToPlayers, 10000);
+    }
 }
 
+
+function checkIfUpdateLogs() {
+    if (document.getElementById('updateLogsPlease').checked) {
+        addLogIntoToPlayers();
+        console.log("Turning on log checking");
+    } else {
+        // clearTimeout(checkForLogsTenSeconds);
+        console.log("Turning off log checking");
+    }
+}
 // Returns the general embed code for a given GUID. Autostart set to False   
 function embedPlayerCode(eventGUID){
      embedCode = '<iframe src="http://videoplayback.parliamentlive.tv/Player/Index/'+eventGUID+'?audioOnly=False&amp;autoStart=False&amp;statsEnabled=True" id="UKPPlayer" name="UKPPlayer" title="UK Parliament Player" seamless="seamless" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe>';
